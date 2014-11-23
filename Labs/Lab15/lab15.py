@@ -1,12 +1,19 @@
 import pandas as pd
 import numpy as np
 import datetime as dt
+from sklearn.metrics import auc
+import pylab
+import matplotlib
 from sklearn.cross_validation import KFold
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import roc_curve
+import matplotlib.pyplot as plt
+
+
 
 
 def cross_validate(X, y, classifier, k_fold):
@@ -42,17 +49,33 @@ def cleanData():
 
 def scoreModels(features, target, folds=10):
     "Calcs crovs-validation scores for multiple algorithms"
+    #import pdb
+    #pdb.set_trace()
     models = []
     models.append(RandomForestClassifier(random_state=0).fit)
     models.append(LogisticRegression(C=1.0).fit)
     models.append(KNeighborsClassifier(3).fit)
-    models.append(SVC(C=1.0))
+    models.append(SVC(C=1.0).fit)
     models.append(GaussianNB().fit)
 
     for alg in models:
         print alg
         print cross_validate(features, target, alg, folds)
 
+def bayes_ROC(features, target):
+	model = GaussianNB().fit(features,target)
+	target_predicted_proba =  model.predict_proba(features)
+	fpr, tpr, thresholds = roc_curve(target, target_predicted_proba[:, 1])
+	roc_auc = auc(fpr, tpr)
+	plt.plot(fpr, tpr, label='ROC curve (area = %0.3f)' % roc_auc)
+	plt.plot([0, 1], [0, 1], 'k--')  # random predictions curve
+	plt.xlim([0.0, 1.0])
+	plt.ylim([0.0, 1.0])
+	plt.xlabel('False Positive Rate or (1 - Specifity)')
+	plt.ylabel('True Positive Rate or (Sensitivity)')
+	plt.title('Receiver Operating Characteristic')
+	plt.legend(loc="lower right")	
+	plt.show()
 
 def main():
     features, target = cleanData()
